@@ -1,0 +1,7 @@
+
+If no document active, we need to allow users to upload a PDF 
+
+When they upload the document -> load into a document class, set as the active document
+
+Should be a text editor component which takes in a document as a prop. This component should have a text area to display the text content of the document.
+    - This will be the main way the user interfaces with the document - editing 

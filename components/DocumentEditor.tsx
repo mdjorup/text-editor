@@ -1,7 +1,6 @@
 'use client';
 
 import { DocumentEditorProps } from "@/lib/types";
-import { Textarea } from "./ui/textarea";
 
 
 const DocumentEditor: React.FC<DocumentEditorProps> = ({ content, onContentChange }) => {
@@ -9,13 +8,12 @@ const DocumentEditor: React.FC<DocumentEditorProps> = ({ content, onContentChang
 
 
   return (
-    <div className="">
+    <div className="h-full w-full">
 
-      <Textarea
+      <textarea
+        className="h-full w-full resize-none border-none focus:outline-none focus:ring-0"
         value={content}
         onChange={(e) => onContentChange(e.target.value)}
-        rows={20}
-        cols={80}
       />
     </div>
   );

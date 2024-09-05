@@ -1,14 +1,17 @@
 'use client'
 
-import DocumentEditor from "@/components/DocumentEditor";
 import UploadDocument from "@/components/UploadDocument";
 import { Button } from "@/components/ui/button";
 import { Menubar, MenubarContent, MenubarItem, MenubarMenu, MenubarSeparator, MenubarShortcut, MenubarSub, MenubarSubContent, MenubarSubTrigger, MenubarTrigger } from "@/components/ui/menubar";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from "@/components/ui/sheet";
+import { Textarea } from "@/components/ui/textarea";
+import { ToastAction } from "@/components/ui/toast";
+import { Toaster } from "@/components/ui/toaster";
+import { useToast } from "@/hooks/use-toast";
 import { Version } from "@/lib/types";
 import { format } from "date-fns";
-import { Clock, RotateCcwIcon } from "lucide-react";
+import { Clock, HistoryIcon, RotateCcwIcon, SaveIcon } from "lucide-react";
 import * as pdfjsLib from 'pdfjs-dist';
 import { useCallback, useState } from "react";
 
@@ -22,7 +25,8 @@ export default function Home() {
 
   const [showingVersionHistory, setShowingVersionHistory] = useState(false); 
 
-
+  const { toast } = useToast();
+  
 
 
   const handleContentChange = useCallback((newContent: string) => {
@@ -42,7 +46,15 @@ export default function Home() {
 
     
     setVersions([...versions, newVersion]);
-  }, [activeDocument, versions]);
+    toast({
+      title: 'Version Saved',
+      description: 'Your document has been saved as a new version.',
+      variant: "default",
+      action: <ToastAction altText="Version History" onClick={() => setShowingVersionHistory(true)}><HistoryIcon className="w-4 h-4"/><span>Version History</span></ToastAction>
+    })
+
+
+  }, [activeDocument, versions, toast]);
 
   const loadVersion = useCallback((versionId: number) => {
     const versionToLoad = versions.find(v => v.id === versionId);
@@ -65,12 +77,13 @@ export default function Home() {
   return (
     <main>
 
-      <div className="h-screen w-screen border">
+      <div className="h-screen w-screen">
         {activeDocument === null  && <div className="flex items-center justify-center h-full w-full">
           <UploadDocument onUpload={onUpload}/>
         </div>}
-        {activeDocument !== null && <div className="px-52 mt-52 "> 
-          <Menubar className="mb-1 w-fit">
+        {activeDocument !== null && <div className="px-52 mt-20 mb-10 flex-grow overflow-hidden"> 
+          <Toaster />
+          <Menubar className="mb-2 w-fit">
             <MenubarMenu>
               <MenubarTrigger>
                 File
@@ -84,7 +97,7 @@ export default function Home() {
                 </MenubarItem>
                 <MenubarSeparator />
                 <MenubarSub>
-                  <MenubarSubTrigger>Download</MenubarSubTrigger>
+                  <MenubarSubTrigger disabled>Download</MenubarSubTrigger>
                   <MenubarSubContent>
                     <MenubarItem>PDF</MenubarItem>
                     <MenubarItem>TXT</MenubarItem>
@@ -95,15 +108,15 @@ export default function Home() {
             <MenubarMenu>
             <MenubarTrigger>Edit</MenubarTrigger>
               <MenubarContent>
-                <MenubarItem>
+                <MenubarItem disabled>
                   Undo <MenubarShortcut>⌘Z</MenubarShortcut>
                 </MenubarItem>
-                <MenubarItem>
+                <MenubarItem disabled>
                   Redo <MenubarShortcut>⇧⌘Z</MenubarShortcut>
                 </MenubarItem>
                 <MenubarSeparator />
                 <MenubarSub>
-                  <MenubarSubTrigger>Find</MenubarSubTrigger>
+                  <MenubarSubTrigger disabled>Find</MenubarSubTrigger>
                   <MenubarSubContent>
                     <MenubarItem>Find...</MenubarItem>
                     <MenubarItem>Find Next</MenubarItem>
@@ -125,7 +138,13 @@ export default function Home() {
               </MenubarContent>
             </MenubarMenu>
           </Menubar>
-          <DocumentEditor content={activeDocument} onContentChange={handleContentChange} />
+          {/* <DocumentEditor content={activeDocument} onContentChange={handleContentChange} /> */}
+          <Textarea
+            className="w-full my-2 h-fit"
+            value={activeDocument}
+            onChange={(e) => handleContentChange(e.target.value)}
+            rows={40}
+          />
           <Sheet open={showingVersionHistory} onOpenChange={setShowingVersionHistory}>
             <SheetContent side={'right'}>
               <SheetHeader>
@@ -136,6 +155,31 @@ export default function Home() {
               </SheetHeader>
               <ScrollArea className="mt-4">
                 <div className="space-y-4">
+                  {versions.at(0)?.content !== activeDocument && <div className="flex items-center space-x-4 p-4 rounded-lg bg-gray-50 hover:bg-gray-100 transition-colors">
+                    <div className="flex-shrink-0 w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center">
+                      <Clock className="w-6 h-6 text-blue-600" />
+                    </div>
+                    <div className="flex-grow">
+                      <p className="text-sm font-medium text-gray-900">
+                        Current Version
+                      </p>
+                      <p className="text-xs text-gray-500">
+                        Unsaved
+                      </p>
+                    </div>
+                    <Button
+                          variant="ghost"
+                          size="sm"
+                          className="flex items-center space-x-1"
+                          onClick={() => {
+                            saveVersion()
+                            setShowingVersionHistory(false)
+                          }}
+                        >
+                          <SaveIcon className="w-4 h-4" />
+                          <span>Save</span>
+                        </Button>
+                  </div>}
                   {versions
                     .sort((a, b) => b.timestamp.getTime() - a.timestamp.getTime())
                     .map((version, index) => (

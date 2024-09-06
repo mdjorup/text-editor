@@ -1,6 +1,7 @@
 'use client'
 
 import FindReplaceToolbar from "@/components/FindReplaceToolbar";
+import HighlightedTextarea from "@/components/HighlightedTextarea";
 import UploadDocument from "@/components/UploadDocument";
 import { Button } from "@/components/ui/button";
 import { Menubar, MenubarContent, MenubarItem, MenubarMenu, MenubarSeparator, MenubarShortcut, MenubarSub, MenubarSubContent, MenubarSubTrigger, MenubarTrigger } from "@/components/ui/menubar";
@@ -13,7 +14,7 @@ import { Version } from "@/lib/types";
 import { format } from "date-fns";
 import { Clock, HistoryIcon, RotateCcwIcon, SaveIcon } from 'lucide-react';
 import * as pdfjsLib from 'pdfjs-dist';
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 
 pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdn.jsdelivr.net/npm/pdfjs-dist@4.6.82/build/pdf.worker.mjs';
 
@@ -22,11 +23,10 @@ export default function Home() {
   const [versions, setVersions] = useState<Version[]>([]);
   const [showingVersionHistory, setShowingVersionHistory] = useState(false);
   const [showingFindReplace, setShowingFindReplace] = useState(false);
-  const { toast } = useToast();
-  const contentEditableRef = useRef<HTMLDivElement>(null);
+  const [findText, setFindText] = useState('');
   const [matches, setMatches] = useState<number[]>([]);
   const [currentMatchIndex, setCurrentMatchIndex] = useState<number>(-1);
-  const [findText, setFindText] = useState('');
+  const { toast } = useToast();
 
   const handleContentChange = useCallback((newContent: string) => {
     setActiveDocument(newContent);
@@ -50,28 +50,6 @@ export default function Home() {
       action: <ToastAction altText="Version History" onClick={() => setShowingVersionHistory(true)}><HistoryIcon className="w-4 h-4"/><span>Version History</span></ToastAction>
     })
   }, [activeDocument, versions, toast]);
-
-  useEffect(() => {
-    const handleKeyDown = (e: KeyboardEvent) => {
-      if ((e.metaKey || e.ctrlKey) && e.key === 'h') {
-        e.preventDefault();
-        toggleVersionHistory();
-      }
-      if ((e.metaKey || e.ctrlKey) && e.key === 'f') {
-        e.preventDefault();
-        toggleFindReplace();
-      }
-      if ((e.metaKey || e.ctrlKey) && e.key === 's') {
-        e.preventDefault();
-        saveVersion();
-      }
-    };
-
-    document.addEventListener('keydown', handleKeyDown);
-    return () => {
-      document.removeEventListener('keydown', handleKeyDown);
-    };
-  }, [saveVersion]);
 
   const loadVersion = useCallback((versionId: number) => {
     const versionToLoad = versions.find(v => v.id === versionId);
@@ -97,48 +75,41 @@ export default function Home() {
     setShowingFindReplace(prev => !prev);
   };
 
-  const handleHighlight = useCallback((newMatches: number[], newCurrentMatchIndex: number, newFindText: string) => {
-    setMatches(newMatches);
-    setCurrentMatchIndex(newCurrentMatchIndex);
-    setFindText(newFindText);
-  }, []);
-
-  const getHighlightedContent = useCallback(() => {
-    if (!activeDocument || matches.length === 0 || !findText) return activeDocument ?? '';
-
-    let result = '';
-    let lastIndex = 0;
-    const findTextLength = findText.length;
-
-    matches.forEach((matchIndex, index) => {
-      result += activeDocument.slice(lastIndex, matchIndex);
-      const isCurrentMatch = index === currentMatchIndex;
-      const highlightClass = isCurrentMatch ? 'bg-blue-300' : 'bg-yellow-200';
-      result += `<span class="${highlightClass}">${activeDocument.slice(matchIndex, matchIndex + findTextLength)}</span>`;
-      lastIndex = matchIndex + findTextLength;
-    });
-
-    result += activeDocument.slice(lastIndex);
-    return result;
-  }, [activeDocument, matches, currentMatchIndex, findText]);
-
   useEffect(() => {
-    if (contentEditableRef.current) {
-      contentEditableRef.current.innerHTML = getHighlightedContent() || '';
-    }
-  }, [getHighlightedContent]);
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if ((e.metaKey || e.ctrlKey) && e.key === 'h') {
+        e.preventDefault();
+        toggleVersionHistory();
+      }
+      if ((e.metaKey || e.ctrlKey) && e.key === 'f') {
+        e.preventDefault();
+        toggleFindReplace();
+      }
+      if ((e.metaKey || e.ctrlKey) && e.key === 's') {
+        e.preventDefault();
+        saveVersion();
+      }
+    };
+
+    document.addEventListener('keydown', handleKeyDown);
+    return () => {
+      document.removeEventListener('keydown', handleKeyDown);
+    };
+  }, [saveVersion]);
+
+  
 
   
   return (
     <main>
 
-      <div className="h-screen w-screen">
+      <div className="h-screen w-screen flex flex-col overflow-hidden">
         {activeDocument === null  && <div className="flex items-center justify-center h-full w-full">
           <UploadDocument onUpload={onUpload}/>
         </div>}
-        {activeDocument !== null && <div className="px-52 mt-20 mb-10 flex-grow overflow-hidden"> 
+        {activeDocument !== null && <div className="flex flex-col h-full overflow-hidden"> 
           <Toaster />
-          <Menubar className="mb-2 w-fit">
+          <Menubar className="flex-shrink-0 mb-2">
             <MenubarMenu>
               <MenubarTrigger>
                 File
@@ -189,20 +160,23 @@ export default function Home() {
             </MenubarMenu>
           </Menubar>
 
-          <div className="w-full my-2 h-[calc(100vh-200px)] bg-white shadow-md rounded-lg overflow-hidden relative">
+          <div className="flex-grow relative overflow-hidden bg-white shadow-md rounded-lg">
             {showingFindReplace && (
               <FindReplaceToolbar
                 content={activeDocument}
                 onReplace={handleFindReplace}
                 onClose={toggleFindReplace}
-                onHighlight={handleHighlight}
+                onFindTextChange={setFindText}
+                onMatchesChange={setMatches}
+                onCurrentMatchIndexChange={setCurrentMatchIndex}
               />
             )}
-            <div
-              className="w-full h-full resize-none p-8 text-base leading-relaxed border-none focus:ring-0 focus:outline-none overflow-auto"
-              dangerouslySetInnerHTML={{ __html: getHighlightedContent() }}
-              contentEditable
-              onInput={(e) => handleContentChange(e.currentTarget.textContent || '')}
+            <HighlightedTextarea
+              content={activeDocument}
+              matches={matches}
+              currentMatchIndex={currentMatchIndex}
+              findText={findText}
+              onChange={handleContentChange}
             />
           </div>
           <Sheet open={showingVersionHistory} onOpenChange={setShowingVersionHistory}>

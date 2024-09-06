@@ -10,21 +10,23 @@ interface FindReplaceToolbarProps {
   content: string;
   onReplace: (newContent: string) => void;
   onClose: () => void;
-  onHighlight: (matches: number[], currentMatchIndex: number, findText: string) => void;
+  onFindTextChange: (findText: string) => void;
+  onMatchesChange: (matches: number[]) => void;
+  onCurrentMatchIndexChange: (index: number) => void;
 }
 
-const FindReplaceToolbar: React.FC<FindReplaceToolbarProps> = ({content, onReplace, onClose, onHighlight}) => {
+const FindReplaceToolbar: React.FC<FindReplaceToolbarProps> = ({content, onReplace, onClose, onFindTextChange, onMatchesChange, onCurrentMatchIndexChange}) => {
   const [findText, setFindText] = useState('')
   const [replaceText, setReplaceText] = useState('')
   const [matches, setMatches] = useState<number[]>([])
   const [currentMatchIndex, setCurrentMatchIndex] = useState<number>(-1);
   const [isCaseSensitive, setIsCaseSensitive] = useState(false);
 
+
   const findMatches = useCallback(() => {
     if (!findText) {
       setMatches([]);
       setCurrentMatchIndex(-1);
-      onHighlight([], -1, '');
       return;
     }
 
@@ -38,18 +40,22 @@ const FindReplaceToolbar: React.FC<FindReplaceToolbarProps> = ({content, onRepla
     setMatches(newMatches);
     const newCurrentMatchIndex = newMatches.length > 0 ? 0 : -1;
     setCurrentMatchIndex(newCurrentMatchIndex);
-    onHighlight(newMatches, newCurrentMatchIndex, findText);
-  }, [findText, content, onHighlight, isCaseSensitive]);
+  }, [findText, content, isCaseSensitive]);
 
   useEffect(() => {
     findMatches();
   }, [findText, content, isCaseSensitive, findMatches]);
+  
+  useEffect(() => {
+    onFindTextChange(findText);
+    onMatchesChange(matches);
+    onCurrentMatchIndexChange(currentMatchIndex);
+  }, [findText, matches, currentMatchIndex, onFindTextChange, onMatchesChange, onCurrentMatchIndexChange]);
 
   const handleFindNext = () => {
     if (matches.length > 0) {
       const nextIndex = (currentMatchIndex + 1) % matches.length;
       setCurrentMatchIndex(nextIndex);
-      onHighlight(matches, nextIndex, findText);
     }
   };
   
@@ -57,7 +63,6 @@ const FindReplaceToolbar: React.FC<FindReplaceToolbarProps> = ({content, onRepla
     if (matches.length > 0) {
       const prevIndex = (currentMatchIndex - 1 + matches.length) % matches.length;
       setCurrentMatchIndex(prevIndex);
-      onHighlight(matches, prevIndex, findText);
     }
   };
 

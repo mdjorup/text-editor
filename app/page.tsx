@@ -107,9 +107,9 @@ export default function Home() {
         {activeDocument === null  && <div className="flex items-center justify-center h-full w-full">
           <UploadDocument onUpload={onUpload}/>
         </div>}
-        {activeDocument !== null && <div className="flex flex-col h-full overflow-hidden"> 
+        {activeDocument !== null && <div className="flex flex-col h-full overflow-hidden px-40 mt-20"> 
           <Toaster />
-          <Menubar className="flex-shrink-0 mb-2">
+          <Menubar className="flex-shrink-0 mb-4">
             <MenubarMenu>
               <MenubarTrigger>
                 File

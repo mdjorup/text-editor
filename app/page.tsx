@@ -6,37 +6,31 @@ import { Button } from "@/components/ui/button";
 import { Menubar, MenubarContent, MenubarItem, MenubarMenu, MenubarSeparator, MenubarShortcut, MenubarSub, MenubarSubContent, MenubarSubTrigger, MenubarTrigger } from "@/components/ui/menubar";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from "@/components/ui/sheet";
-import { Textarea } from "@/components/ui/textarea";
 import { ToastAction } from "@/components/ui/toast";
 import { Toaster } from "@/components/ui/toaster";
 import { useToast } from "@/hooks/use-toast";
 import { Version } from "@/lib/types";
 import { format } from "date-fns";
-import { Clock, HistoryIcon, RotateCcwIcon, SaveIcon } from "lucide-react";
+import { Clock, HistoryIcon, RotateCcwIcon, SaveIcon } from 'lucide-react';
 import * as pdfjsLib from 'pdfjs-dist';
 import { useCallback, useEffect, useRef, useState } from "react";
 
 pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdn.jsdelivr.net/npm/pdfjs-dist@4.6.82/build/pdf.worker.mjs';
 
-
 export default function Home() {
-
   const [activeDocument, setActiveDocument] = useState<string | null>(null);
-  const [highlightedContent, setHighlightedContent] = useState<string | null>(null);
   const [versions, setVersions] = useState<Version[]>([]);
   const [showingVersionHistory, setShowingVersionHistory] = useState(false);
   const [showingFindReplace, setShowingFindReplace] = useState(false);
   const { toast } = useToast();
-  const textareaRef = useRef<HTMLTextAreaElement>(null);
-  
-
-  
+  const contentEditableRef = useRef<HTMLDivElement>(null);
+  const [matches, setMatches] = useState<number[]>([]);
+  const [currentMatchIndex, setCurrentMatchIndex] = useState<number>(-1);
+  const [findText, setFindText] = useState('');
 
   const handleContentChange = useCallback((newContent: string) => {
     setActiveDocument(newContent);
-    setHighlightedContent(newContent);
   }, []);
-  
 
   const saveVersion = useCallback(() => {
     if (activeDocument === null) {
@@ -48,7 +42,6 @@ export default function Home() {
       timestamp: new Date(),
     };
 
-    
     setVersions([...versions, newVersion]);
     toast({
       title: 'Version Saved',
@@ -56,8 +49,6 @@ export default function Home() {
       variant: "default",
       action: <ToastAction altText="Version History" onClick={() => setShowingVersionHistory(true)}><HistoryIcon className="w-4 h-4"/><span>Version History</span></ToastAction>
     })
-
-
   }, [activeDocument, versions, toast]);
 
   useEffect(() => {
@@ -86,15 +77,12 @@ export default function Home() {
     const versionToLoad = versions.find(v => v.id === versionId);
     if (versionToLoad) {
       setActiveDocument(versionToLoad.content);
-      setHighlightedContent(null);
       setShowingVersionHistory(false);
     }
   }, [versions]);
 
-
   const onUpload = (text: string) => {
     setActiveDocument(text);
-    setHighlightedContent(null);
   };
 
   const toggleVersionHistory = () => {
@@ -103,16 +91,42 @@ export default function Home() {
 
   const handleFindReplace = (newContent: string) => {
     setActiveDocument(newContent);
-    setHighlightedContent(null);
   };
 
   const toggleFindReplace = () => {
     setShowingFindReplace(prev => !prev);
   };
 
-  const handleHighlight = (highlightedContent: string) => {
-    setHighlightedContent(highlightedContent);
-  };
+  const handleHighlight = useCallback((newMatches: number[], newCurrentMatchIndex: number, newFindText: string) => {
+    setMatches(newMatches);
+    setCurrentMatchIndex(newCurrentMatchIndex);
+    setFindText(newFindText);
+  }, []);
+
+  const getHighlightedContent = useCallback(() => {
+    if (!activeDocument || matches.length === 0 || !findText) return activeDocument ?? '';
+
+    let result = '';
+    let lastIndex = 0;
+    const findTextLength = findText.length;
+
+    matches.forEach((matchIndex, index) => {
+      result += activeDocument.slice(lastIndex, matchIndex);
+      const isCurrentMatch = index === currentMatchIndex;
+      const highlightClass = isCurrentMatch ? 'bg-blue-300' : 'bg-yellow-200';
+      result += `<span class="${highlightClass}">${activeDocument.slice(matchIndex, matchIndex + findTextLength)}</span>`;
+      lastIndex = matchIndex + findTextLength;
+    });
+
+    result += activeDocument.slice(lastIndex);
+    return result;
+  }, [activeDocument, matches, currentMatchIndex, findText]);
+
+  useEffect(() => {
+    if (contentEditableRef.current) {
+      contentEditableRef.current.innerHTML = getHighlightedContent() || '';
+    }
+  }, [getHighlightedContent]);
 
   
   return (
@@ -184,11 +198,11 @@ export default function Home() {
                 onHighlight={handleHighlight}
               />
             )}
-            <Textarea
-              className="w-full h-full resize-none p-8 text-base leading-relaxed border-none focus:ring-0 focus:outline-none"
-              value={activeDocument}
-              onChange={(e) => handleContentChange(e.target.value)}
-              // highlightString={highlightedContent !== "" ? highlightedContent : null}
+            <div
+              className="w-full h-full resize-none p-8 text-base leading-relaxed border-none focus:ring-0 focus:outline-none overflow-auto"
+              dangerouslySetInnerHTML={{ __html: getHighlightedContent() }}
+              contentEditable
+              onInput={(e) => handleContentChange(e.currentTarget.textContent || '')}
             />
           </div>
           <Sheet open={showingVersionHistory} onOpenChange={setShowingVersionHistory}>

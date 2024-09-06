@@ -10,7 +10,7 @@ interface FindReplaceToolbarProps {
   content: string;
   onReplace: (newContent: string) => void;
   onClose: () => void;
-  onHighlight: (highlightedContent: string) => void;
+  onHighlight: (matches: number[], currentMatchIndex: number, findText: string) => void;
 }
 
 const FindReplaceToolbar: React.FC<FindReplaceToolbarProps> = ({content, onReplace, onClose, onHighlight}) => {
@@ -20,12 +20,11 @@ const FindReplaceToolbar: React.FC<FindReplaceToolbarProps> = ({content, onRepla
   const [currentMatchIndex, setCurrentMatchIndex] = useState<number>(-1);
   const [isCaseSensitive, setIsCaseSensitive] = useState(false);
 
-
   const findMatches = useCallback(() => {
     if (!findText) {
       setMatches([]);
       setCurrentMatchIndex(-1);
-      onHighlight(content);
+      onHighlight([], -1, '');
       return;
     }
 
@@ -37,8 +36,9 @@ const FindReplaceToolbar: React.FC<FindReplaceToolbarProps> = ({content, onRepla
       newMatches.push(match.index);
     }
     setMatches(newMatches);
-    setCurrentMatchIndex(newMatches.length > 0 ? 0 : -1);
-
+    const newCurrentMatchIndex = newMatches.length > 0 ? 0 : -1;
+    setCurrentMatchIndex(newCurrentMatchIndex);
+    onHighlight(newMatches, newCurrentMatchIndex, findText);
   }, [findText, content, onHighlight, isCaseSensitive]);
 
   useEffect(() => {
@@ -49,6 +49,7 @@ const FindReplaceToolbar: React.FC<FindReplaceToolbarProps> = ({content, onRepla
     if (matches.length > 0) {
       const nextIndex = (currentMatchIndex + 1) % matches.length;
       setCurrentMatchIndex(nextIndex);
+      onHighlight(matches, nextIndex, findText);
     }
   };
   
@@ -56,6 +57,7 @@ const FindReplaceToolbar: React.FC<FindReplaceToolbarProps> = ({content, onRepla
     if (matches.length > 0) {
       const prevIndex = (currentMatchIndex - 1 + matches.length) % matches.length;
       setCurrentMatchIndex(prevIndex);
+      onHighlight(matches, prevIndex, findText);
     }
   };
 
@@ -65,6 +67,7 @@ const FindReplaceToolbar: React.FC<FindReplaceToolbarProps> = ({content, onRepla
       const after = content.slice(matches[currentMatchIndex] + findText.length);
       const newContent = before + replaceText + after;
       onReplace(newContent);
+      findMatches(); // Refresh matches after replace
     }
   };
 
@@ -74,9 +77,9 @@ const FindReplaceToolbar: React.FC<FindReplaceToolbarProps> = ({content, onRepla
       const regex = new RegExp(findText, flags);
       const newContent = content.replace(regex, replaceText);
       onReplace(newContent);
+      findMatches(); // Refresh matches after replace all
     }
   };
-
 
   return (
     <div className="fixed top-4 left-1/2 transform -translate-x-1/2 bg-white shadow-md rounded-lg p-2 flex items-center space-x-2 z-50">
@@ -106,7 +109,6 @@ const FindReplaceToolbar: React.FC<FindReplaceToolbarProps> = ({content, onRepla
       <div className='flex items-center space-x-2'>
         <Checkbox id="caseSensitive" checked={isCaseSensitive} onCheckedChange={() => setIsCaseSensitive(!isCaseSensitive)} />
         <label htmlFor="caseSensitive" className='text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70'>Case sensitive</label>
-
       </div>
       <Button size="icon" variant="ghost" onClick={onClose}>
         <X className="h-4 w-4" />
@@ -114,7 +116,5 @@ const FindReplaceToolbar: React.FC<FindReplaceToolbarProps> = ({content, onRepla
     </div>
   )
 }
-
-
 
 export default FindReplaceToolbar

@@ -59,7 +59,7 @@ export default function Home() {
 
 
   }, [activeDocument, versions, toast]);
-  
+
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if ((e.metaKey || e.ctrlKey) && e.key === 'h') {
@@ -188,6 +188,7 @@ export default function Home() {
               className="w-full h-full resize-none p-8 text-base leading-relaxed border-none focus:ring-0 focus:outline-none"
               value={activeDocument}
               onChange={(e) => handleContentChange(e.target.value)}
+              // highlightString={highlightedContent !== "" ? highlightedContent : null}
             />
           </div>
           <Sheet open={showingVersionHistory} onOpenChange={setShowingVersionHistory}>

@@ -1,29 +1,43 @@
 'use client';
 
-import React from 'react';
-import { Textarea } from './ui/textarea';
+import { cn } from '@/lib/utils';
+import { HighlightWithinTextarea } from "react-highlight-within-textarea";
+import { type HWTAProps } from "react-highlight-within-textarea/lib/esm/HighlightWithinTextarea";
+
 
 type Highlight = 
   | string
   | RegExp
   | (string | RegExp)[]
-  | ((value: string) => string | RegExp | (string | RegExp)[]);
+  | ((value: string) => string | RegExp | (string | RegExp)[])
 
-interface HighlightedTextareaProps extends React.TextareaHTMLAttributes<HTMLTextAreaElement> {
-  highlightedContent: Highlight;
-
-}
-
-const HighlightedTextarea: React.FC<HighlightedTextareaProps> = ({ 
-  value, 
-  onChange, 
-  highlightedContent, // The string that we want to highlight
+const HighlightedTextarea = ({
+  value,
+  highlightString,
+  onChange,
   className,
-  ...restProps 
-}) => {
+  ...restProps
+}: {
+  value: string;
+  highlightString: Highlight;
+  onChange: (value: string) => void;
+  className?: string;
+} & HWTAProps) => {
 
   return (
-    <Textarea value={value} onChange={onChange} className={className}/>
+    <div
+      className={cn(
+        "relative rounded border border-input p-1 focus-within:ring-2 focus-within:ring-ring focus-within:ring-offset-2",
+        className,
+      )}
+    >
+      <HighlightWithinTextarea
+        value={value}
+        highlight={highlightString}
+        onChange={onChange}
+        {...restProps}
+      />
+    </div>
   );
 };
 

@@ -49,14 +49,15 @@ const FindReplaceToolbar: React.FC<FindReplaceToolbarProps> = ({content, onRepla
 
   useEffect(() => {
     findMatches();
-  }, [findText, content, findMatches, currentMatchIndex, isCaseSensitive]);
+  }, [findText, content, isCaseSensitive, findMatches]);
+
 
   const handleFindNext = () => {
     if (matches.length > 0) {
       setCurrentMatchIndex((prevIndex) => (prevIndex + 1) % matches.length);
     }
   };
-
+  
   const handleFindPrevious = () => {
     if (matches.length > 0) {
       setCurrentMatchIndex((prevIndex) => (prevIndex - 1 + matches.length) % matches.length);
@@ -93,10 +94,10 @@ const FindReplaceToolbar: React.FC<FindReplaceToolbarProps> = ({content, onRepla
       <span className="text-sm text-gray-500">
         {currentMatchIndex + 1} of {matches.length}
       </span>
-      <Button size="icon" variant="ghost" onClick={handleFindPrevious}>
+      <Button size="icon" variant="ghost" onClick={handleFindPrevious} disabled={matches.length === 0}>
         <ArrowUp className="h-4 w-4" />
       </Button>
-      <Button size="icon" variant="ghost" onClick={handleFindNext}>
+      <Button size="icon" variant="ghost" onClick={handleFindNext} disabled={matches.length === 0}>
         <ArrowDown className="h-4 w-4" />
       </Button>
       <Input
@@ -105,8 +106,8 @@ const FindReplaceToolbar: React.FC<FindReplaceToolbarProps> = ({content, onRepla
         onChange={(e) => setReplaceText(e.target.value)}
         className="w-40"
       />
-      <Button size="sm" onClick={handleReplace}>Replace</Button>
-      <Button size="sm" onClick={handleReplaceAll}>Replace All</Button>
+      <Button size="sm" onClick={handleReplace} disabled={replaceText === "" || matches.length === 0 }>Replace</Button>
+      <Button size="sm" onClick={handleReplaceAll} disabled={replaceText === "" || matches.length === 0 }>Replace All</Button>
       <div className='flex items-center space-x-2'>
         <Checkbox id="caseSensitive" checked={isCaseSensitive} onCheckedChange={() => setIsCaseSensitive(!isCaseSensitive)} />
         <label htmlFor="caseSensitive" className='text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70'>Case sensitive</label>
@@ -115,6 +116,7 @@ const FindReplaceToolbar: React.FC<FindReplaceToolbarProps> = ({content, onRepla
       <Button size="icon" variant="ghost" onClick={onClose}>
         <X className="h-4 w-4" />
       </Button>
+      {currentMatchIndex}
     </div>
   )
 }

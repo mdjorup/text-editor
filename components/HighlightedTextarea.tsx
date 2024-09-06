@@ -70,7 +70,7 @@ const HighlightedTextarea: React.FC<HighlightedTextareaProps> = ({
     <div ref={containerRef} className="relative w-full h-full overflow-hidden">
       <div
         ref={highlightRef}
-        className="absolute top-0 left-0 w-full h-full px-4 pointer-events-none whitespace-pre-wrap overflow-hidden"
+        className="absolute top-0 left-0 w-full h-full px-4 pb-6 pointer-events-none whitespace-pre-wrap overflow-hidden"
         dangerouslySetInnerHTML={{ __html: getHighlightedContent() }}
       />
       <textarea

@@ -9,7 +9,6 @@ const DocumentEditor: React.FC<DocumentEditorProps> = ({ content, onContentChang
 
   return (
     <div className="h-full w-full">
-
       <textarea
         className="h-full w-full resize-none border-none focus:outline-none focus:ring-0"
         value={content}

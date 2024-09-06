@@ -1,5 +1,6 @@
 'use client'
 
+import FindReplaceToolbar from "@/components/FindReplaceToolbar";
 import UploadDocument from "@/components/UploadDocument";
 import { Button } from "@/components/ui/button";
 import { Menubar, MenubarContent, MenubarItem, MenubarMenu, MenubarSeparator, MenubarShortcut, MenubarSub, MenubarSubContent, MenubarSubTrigger, MenubarTrigger } from "@/components/ui/menubar";
@@ -13,7 +14,7 @@ import { Version } from "@/lib/types";
 import { format } from "date-fns";
 import { Clock, HistoryIcon, RotateCcwIcon, SaveIcon } from "lucide-react";
 import * as pdfjsLib from 'pdfjs-dist';
-import { useCallback, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 
 pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdn.jsdelivr.net/npm/pdfjs-dist@4.6.82/build/pdf.worker.mjs';
 
@@ -21,18 +22,21 @@ pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdn.jsdelivr.net/npm/pdfjs-dis
 export default function Home() {
 
   const [activeDocument, setActiveDocument] = useState<string | null>(null);
+  const [highlightedContent, setHighlightedContent] = useState<string | null>(null);
   const [versions, setVersions] = useState<Version[]>([]);
-
-  const [showingVersionHistory, setShowingVersionHistory] = useState(false); 
-
+  const [showingVersionHistory, setShowingVersionHistory] = useState(false);
+  const [showingFindReplace, setShowingFindReplace] = useState(false);
   const { toast } = useToast();
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
   
 
+  
 
   const handleContentChange = useCallback((newContent: string) => {
     setActiveDocument(newContent);
+    setHighlightedContent(newContent);
   }, []);
-
+  
 
   const saveVersion = useCallback(() => {
     if (activeDocument === null) {
@@ -55,11 +59,34 @@ export default function Home() {
 
 
   }, [activeDocument, versions, toast]);
+  
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if ((e.metaKey || e.ctrlKey) && e.key === 'h') {
+        e.preventDefault();
+        toggleVersionHistory();
+      }
+      if ((e.metaKey || e.ctrlKey) && e.key === 'f') {
+        e.preventDefault();
+        toggleFindReplace();
+      }
+      if ((e.metaKey || e.ctrlKey) && e.key === 's') {
+        e.preventDefault();
+        saveVersion();
+      }
+    };
+
+    document.addEventListener('keydown', handleKeyDown);
+    return () => {
+      document.removeEventListener('keydown', handleKeyDown);
+    };
+  }, [saveVersion]);
 
   const loadVersion = useCallback((versionId: number) => {
     const versionToLoad = versions.find(v => v.id === versionId);
     if (versionToLoad) {
       setActiveDocument(versionToLoad.content);
+      setHighlightedContent(null);
       setShowingVersionHistory(false);
     }
   }, [versions]);
@@ -67,11 +94,25 @@ export default function Home() {
 
   const onUpload = (text: string) => {
     setActiveDocument(text);
+    setHighlightedContent(null);
   };
 
   const toggleVersionHistory = () => {
     setShowingVersionHistory(prev => !prev);
   }
+
+  const handleFindReplace = (newContent: string) => {
+    setActiveDocument(newContent);
+    setHighlightedContent(null);
+  };
+
+  const toggleFindReplace = () => {
+    setShowingFindReplace(prev => !prev);
+  };
+
+  const handleHighlight = (highlightedContent: string) => {
+    setHighlightedContent(highlightedContent);
+  };
 
   
   return (
@@ -115,14 +156,9 @@ export default function Home() {
                   Redo <MenubarShortcut>⇧⌘Z</MenubarShortcut>
                 </MenubarItem>
                 <MenubarSeparator />
-                <MenubarSub>
-                  <MenubarSubTrigger disabled>Find</MenubarSubTrigger>
-                  <MenubarSubContent>
-                    <MenubarItem>Find...</MenubarItem>
-                    <MenubarItem>Find Next</MenubarItem>
-                    <MenubarItem>Find Previous</MenubarItem>
-                  </MenubarSubContent>
-                </MenubarSub>
+                <MenubarItem onClick={toggleFindReplace}>
+                  Find and Replace... <MenubarShortcut>⌘F</MenubarShortcut>
+                </MenubarItem>
                 <MenubarSeparator />
                 <MenubarItem disabled>Cut</MenubarItem>
                 <MenubarItem disabled>Copy</MenubarItem>
@@ -138,13 +174,22 @@ export default function Home() {
               </MenubarContent>
             </MenubarMenu>
           </Menubar>
-          {/* <DocumentEditor content={activeDocument} onContentChange={handleContentChange} /> */}
-          <Textarea
-            className="w-full my-2 h-fit"
-            value={activeDocument}
-            onChange={(e) => handleContentChange(e.target.value)}
-            rows={40}
-          />
+
+          <div className="w-full my-2 h-[calc(100vh-200px)] bg-white shadow-md rounded-lg overflow-hidden relative">
+            {showingFindReplace && (
+              <FindReplaceToolbar
+                content={activeDocument}
+                onReplace={handleFindReplace}
+                onClose={toggleFindReplace}
+                onHighlight={handleHighlight}
+              />
+            )}
+            <Textarea
+              className="w-full h-full resize-none p-8 text-base leading-relaxed border-none focus:ring-0 focus:outline-none"
+              value={activeDocument}
+              onChange={(e) => handleContentChange(e.target.value)}
+            />
+          </div>
           <Sheet open={showingVersionHistory} onOpenChange={setShowingVersionHistory}>
             <SheetContent side={'right'}>
               <SheetHeader>

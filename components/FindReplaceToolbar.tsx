@@ -25,7 +25,7 @@ const FindReplaceToolbar: React.FC<FindReplaceToolbarProps> = ({content, onRepla
     if (!findText) {
       setMatches([]);
       setCurrentMatchIndex(-1);
-      onHighlight(content); // Remove highlights when find text is empty
+      onHighlight(content);
       return;
     }
 
@@ -39,28 +39,23 @@ const FindReplaceToolbar: React.FC<FindReplaceToolbarProps> = ({content, onRepla
     setMatches(newMatches);
     setCurrentMatchIndex(newMatches.length > 0 ? 0 : -1);
 
-    const highlightedContent = content.replace(regex, (match, index) => {
-      const isCurrentMatch = newMatches.indexOf(index) === currentMatchIndex;
-      return `<mark class="${isCurrentMatch ? 'bg-yellow-400' : 'bg-yellow-200'}">${match}</mark>`;
-    });
-    onHighlight(highlightedContent);
-
-  }, [findText, content, onHighlight, currentMatchIndex, isCaseSensitive])
+  }, [findText, content, onHighlight, isCaseSensitive]);
 
   useEffect(() => {
     findMatches();
   }, [findText, content, isCaseSensitive, findMatches]);
 
-
   const handleFindNext = () => {
     if (matches.length > 0) {
-      setCurrentMatchIndex((prevIndex) => (prevIndex + 1) % matches.length);
+      const nextIndex = (currentMatchIndex + 1) % matches.length;
+      setCurrentMatchIndex(nextIndex);
     }
   };
   
   const handleFindPrevious = () => {
     if (matches.length > 0) {
-      setCurrentMatchIndex((prevIndex) => (prevIndex - 1 + matches.length) % matches.length);
+      const prevIndex = (currentMatchIndex - 1 + matches.length) % matches.length;
+      setCurrentMatchIndex(prevIndex);
     }
   };
 
@@ -116,7 +111,6 @@ const FindReplaceToolbar: React.FC<FindReplaceToolbarProps> = ({content, onRepla
       <Button size="icon" variant="ghost" onClick={onClose}>
         <X className="h-4 w-4" />
       </Button>
-      {currentMatchIndex}
     </div>
   )
 }

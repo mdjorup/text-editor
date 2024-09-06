@@ -156,7 +156,7 @@ export default function Home() {
                   Redo <MenubarShortcut>⇧⌘Z</MenubarShortcut>
                 </MenubarItem>
                 <MenubarSeparator />
-                <MenubarItem onClick={toggleFindReplace}>
+                <MenubarItem onClick={()=>setShowingFindReplace(true)}>
                   Find and Replace... <MenubarShortcut>⌘F</MenubarShortcut>
                 </MenubarItem>
                 <MenubarSeparator />

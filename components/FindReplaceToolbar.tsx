@@ -1,10 +1,12 @@
 'use client'
 
-import { ArrowDown, ArrowUp, X } from 'lucide-react';
+import { ArrowDown, ArrowUp, Replace, Search, X } from 'lucide-react';
 import React, { useCallback, useEffect, useState } from 'react';
 import { Button } from './ui/button';
 import { Checkbox } from './ui/checkbox';
 import { Input } from './ui/input';
+import { Separator } from './ui/separator';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from './ui/tooltip';
 
 interface FindReplaceToolbarProps {
   content: string;
@@ -104,40 +106,82 @@ const FindReplaceToolbar: React.FC<FindReplaceToolbarProps> = ({content, onRepla
   };
 
   return (
-    <div className="fixed top-4 left-1/2 transform -translate-x-1/2 bg-white shadow-md rounded-lg p-2 flex items-center space-x-2 z-50">
-      <Input
-        placeholder="Find"
-        value={findText}
-        onChange={(e) => setFindText(e.target.value)}
-        className="w-40"
-      />
-      <span className="text-sm text-gray-500">
-        {currentMatchIndex + 1} of {matches.length}
-      </span>
-      <Button size="icon" variant="ghost" onClick={handleFindPrevious} disabled={matches.length === 0}>
-        <ArrowUp className="h-4 w-4" />
-      </Button>
-      <Button size="icon" variant="ghost" onClick={handleFindNext} disabled={matches.length === 0}>
-        <ArrowDown className="h-4 w-4" />
-      </Button>
-      <Input
-        placeholder="Replace"
-        value={replaceText}
-        onChange={(e) => setReplaceText(e.target.value)}
-        className="w-40"
-      />
-      <Button size="sm" onClick={handleReplace} disabled={replaceText === "" || matches.length === 0 }>Replace</Button>
-      <Button size="sm" onClick={handleReplaceAll} disabled={replaceText === "" || matches.length === 0 }>Replace All</Button>
-      <div className='flex items-center space-x-2'>
-        <Checkbox id="caseSensitive" checked={isCaseSensitive} onCheckedChange={() => {
-          setIsCaseSensitive(!isCaseSensitive);
-        }} />
-        <label htmlFor="caseSensitive" className='text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70'>Case sensitive</label>
+    <TooltipProvider>
+      <div className="fixed top-0 left-0 right-0 bg-white dark:bg-gray-800 shadow-md p-2 flex items-center space-x-2 z-50 border-b border-gray-200 dark:border-gray-700">
+        <div className="flex items-center space-x-2 flex-grow">
+          <Search className="text-gray-400 dark:text-gray-500 h-4 w-4" />
+          <Input
+            placeholder="Find"
+            value={findText}
+            onChange={(e) => setFindText(e.target.value)}
+            className="w-48"
+          />
+          <span className="text-sm text-gray-500 dark:text-gray-400 min-w-[60px]">
+            {matches.length > 0 ? `${currentMatchIndex + 1} of ${matches.length}` : 'No matches'}
+          </span>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Button size="icon" variant="ghost" onClick={handleFindPrevious} disabled={matches.length === 0}>
+                <ArrowUp className="h-4 w-4" />
+              </Button>
+            </TooltipTrigger>
+            <TooltipContent>
+              <p>Previous match</p>
+            </TooltipContent>
+          </Tooltip>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Button size="icon" variant="ghost" onClick={handleFindNext} disabled={matches.length === 0}>
+                <ArrowDown className="h-4 w-4" />
+              </Button>
+            </TooltipTrigger>
+            <TooltipContent>
+              <p>Next match</p>
+            </TooltipContent>
+          </Tooltip>
+        </div>
+        <Separator orientation="vertical" className="h-6" />
+        <div className="flex items-center space-x-2">
+          <Replace className="text-gray-400 dark:text-gray-500 h-4 w-4" />
+          <Input
+            placeholder="Replace"
+            value={replaceText}
+            onChange={(e) => setReplaceText(e.target.value)}
+            className="w-48"
+          />
+          <Button size="sm" onClick={handleReplace} disabled={replaceText === "" || matches.length === 0}>
+            Replace
+          </Button>
+          <Button size="sm" onClick={handleReplaceAll} disabled={replaceText === "" || matches.length === 0}>
+            Replace All
+          </Button>
+        </div>
+        <Separator orientation="vertical" className="h-6" />
+        <div className='flex items-center space-x-2'>
+          <Checkbox
+            id="caseSensitive"
+            checked={isCaseSensitive}
+            onCheckedChange={() => setIsCaseSensitive(!isCaseSensitive)}
+          />
+          <label
+            htmlFor="caseSensitive"
+            className='text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70'
+          >
+            Case sensitive
+          </label>
+        </div>
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <Button size="icon" variant="ghost" onClick={onClose} className="ml-auto">
+              <X className="h-4 w-4" />
+            </Button>
+          </TooltipTrigger>
+          <TooltipContent>
+            <p>Close find and replace</p>
+          </TooltipContent>
+        </Tooltip>
       </div>
-      <Button size="icon" variant="ghost" onClick={onClose}>
-        <X className="h-4 w-4" />
-      </Button>
-    </div>
+    </TooltipProvider>
   )
 }
 

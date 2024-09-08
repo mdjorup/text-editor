@@ -12,7 +12,7 @@ import { Toaster } from "@/components/ui/toaster";
 import { useToast } from "@/hooks/use-toast";
 import { Version } from "@/lib/types";
 import { format } from "date-fns";
-import { Clock, HistoryIcon, RotateCcwIcon, SaveIcon } from 'lucide-react';
+import { Clock, Edit2Icon, EyeIcon, FileIcon, HistoryIcon, RotateCcwIcon, SaveIcon } from 'lucide-react';
 import * as pdfjsLib from 'pdfjs-dist';
 import { useCallback, useEffect, useState } from "react";
 
@@ -102,86 +102,98 @@ export default function Home() {
 
   
   return (
-    <main>
+    <main className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 dark:from-gray-900 dark:to-gray-800">
 
       <div className="h-screen w-screen flex flex-col overflow-hidden">
         {activeDocument === null  && <div className="flex items-center justify-center h-full w-full">
           <UploadDocument onUpload={onUpload}/>
         </div>}
-        {activeDocument !== null && <div className="flex flex-col h-full overflow-hidden px-40 mt-20"> 
+        {activeDocument !== null && <div className="flex flex-col h-full overflow-hidden px-4 sm:px-6 lg:px-8 py-6"> 
           <Toaster />
           <Menubar className="flex-shrink-0 mb-4">
             <MenubarMenu>
-              <MenubarTrigger>
-                File
+              <MenubarTrigger >
+                  <FileIcon className="w-4 h-4 mr-2" />
+                  File
               </MenubarTrigger>
               <MenubarContent>
-                <MenubarItem onClick={saveVersion}>
+                <MenubarItem onClick={saveVersion} className="flex items-center">
+                  <SaveIcon className="w-4 h-4 mr-2" />
                   Save Version <MenubarShortcut>⌘S</MenubarShortcut>
                 </MenubarItem>
-                <MenubarItem disabled>
-                   New Document <MenubarShortcut>⌘N</MenubarShortcut>
-                </MenubarItem>
-                <MenubarSeparator />
-                <MenubarSub>
-                  <MenubarSubTrigger disabled>Download</MenubarSubTrigger>
-                  <MenubarSubContent>
-                    <MenubarItem>PDF</MenubarItem>
-                    <MenubarItem>TXT</MenubarItem>
-                  </MenubarSubContent>
-                </MenubarSub>
+                <MenubarItem disabled className="flex items-center">
+                    <FileIcon className="w-4 h-4 mr-2" />
+                    New Document <MenubarShortcut>⌘N</MenubarShortcut>
+                  </MenubarItem>
+                  <MenubarSeparator />
+                  <MenubarSub>
+                    <MenubarSubTrigger disabled className="flex items-center">
+                      <FileIcon className="w-4 h-4 mr-2" />
+                      Download
+                    </MenubarSubTrigger>
+                    <MenubarSubContent>
+                      <MenubarItem>PDF</MenubarItem>
+                      <MenubarItem>TXT</MenubarItem>
+                    </MenubarSubContent>
+                  </MenubarSub>
               </MenubarContent>
             </MenubarMenu>
             <MenubarMenu>
-            <MenubarTrigger>Edit</MenubarTrigger>
-              <MenubarContent>
-                <MenubarItem disabled>
-                  Undo <MenubarShortcut>⌘Z</MenubarShortcut>
-                </MenubarItem>
-                <MenubarItem disabled>
-                  Redo <MenubarShortcut>⇧⌘Z</MenubarShortcut>
-                </MenubarItem>
-                <MenubarSeparator />
-                <MenubarItem onClick={()=>setShowingFindReplace(true)}>
-                  Find and Replace... <MenubarShortcut>⌘F</MenubarShortcut>
-                </MenubarItem>
-                <MenubarSeparator />
-                <MenubarItem disabled>Cut</MenubarItem>
-                <MenubarItem disabled>Copy</MenubarItem>
-                <MenubarItem disabled>Paste</MenubarItem>
-              </MenubarContent>
-            </MenubarMenu>
-            <MenubarMenu>
-              <MenubarTrigger>View</MenubarTrigger>
-              <MenubarContent>
-                <MenubarItem onClick={toggleVersionHistory}>
-                  Version History <MenubarShortcut>⌘H</MenubarShortcut>
-                </MenubarItem>
-              </MenubarContent>
-            </MenubarMenu>
+                <MenubarTrigger >
+                  <Edit2Icon className="w-4 h-4 mr-2" />
+                  Edit
+                </MenubarTrigger>
+                <MenubarContent>
+                  <MenubarItem disabled className="flex items-center">
+                    <RotateCcwIcon className="w-4 h-4 mr-2" />
+                    Undo <MenubarShortcut>⌘Z</MenubarShortcut>
+                  </MenubarItem>
+                  <MenubarItem disabled className="flex items-center">
+                    <RotateCcwIcon className="w-4 h-4 mr-2 transform scale-x-[-1]" />
+                    Redo <MenubarShortcut>⇧⌘Z</MenubarShortcut>
+                  </MenubarItem>
+                  <MenubarSeparator />
+                  <MenubarItem onClick={() => setShowingFindReplace(true)} className="flex items-center">
+                    <EyeIcon className="w-4 h-4 mr-2" />
+                    Find and Replace <MenubarShortcut>⌘F</MenubarShortcut>
+                  </MenubarItem>
+                </MenubarContent>
+              </MenubarMenu>
+              <MenubarMenu>
+                <MenubarTrigger >
+                  <EyeIcon className="w-4 h-4 mr-2" />
+                  View
+                </MenubarTrigger>
+                <MenubarContent>
+                  <MenubarItem onClick={toggleVersionHistory} className="flex items-center">
+                    <HistoryIcon className="w-4 h-4 mr-2" />
+                    Version History <MenubarShortcut>⌘H</MenubarShortcut>
+                  </MenubarItem>
+                </MenubarContent>
+              </MenubarMenu>
           </Menubar>
 
-          <div className="flex-grow relative overflow-hidden bg-white shadow-md rounded-lg">
-            {showingFindReplace && (
-              <FindReplaceToolbar
+          <div className="flex-grow relative overflow-hidden bg-white dark:bg-gray-800 shadow-lg rounded-lg border border-gray-200 dark:border-gray-700">
+              {showingFindReplace && (
+                <FindReplaceToolbar
+                  content={activeDocument}
+                  onReplace={handleFindReplace}
+                  onClose={toggleFindReplace}
+                  onFindTextChange={setFindText}
+                  onMatchesChange={setMatches}
+                  onCurrentMatchIndexChange={setCurrentMatchIndex}
+                  onCaseSensitiveChange={setIsCaseSensitive}
+                />
+              )}
+              <HighlightedTextarea
                 content={activeDocument}
-                onReplace={handleFindReplace}
-                onClose={toggleFindReplace}
-                onFindTextChange={setFindText}
-                onMatchesChange={setMatches}
-                onCurrentMatchIndexChange={setCurrentMatchIndex}
-                onCaseSensitiveChange={setIsCaseSensitive}
+                matches={matches}
+                currentMatchIndex={currentMatchIndex}
+                findText={findText}
+                isCaseSensitive={isCaseSensitive}
+                onChange={handleContentChange}
               />
-            )}
-            <HighlightedTextarea
-              content={activeDocument}
-              matches={matches}
-              currentMatchIndex={currentMatchIndex}
-              findText={findText}
-              isCaseSensitive={isCaseSensitive}
-              onChange={handleContentChange}
-            />
-          </div>
+            </div>
           <Sheet open={showingVersionHistory} onOpenChange={setShowingVersionHistory}>
             <SheetContent side={'right'}>
               <SheetHeader>

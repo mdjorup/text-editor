@@ -26,6 +26,7 @@ export default function Home() {
   const [findText, setFindText] = useState('');
   const [matches, setMatches] = useState<number[]>([]);
   const [currentMatchIndex, setCurrentMatchIndex] = useState<number>(-1);
+  const [isCaseSensitive, setIsCaseSensitive] = useState(false);
   const { toast } = useToast();
 
   const handleContentChange = useCallback((newContent: string) => {
@@ -169,6 +170,7 @@ export default function Home() {
                 onFindTextChange={setFindText}
                 onMatchesChange={setMatches}
                 onCurrentMatchIndexChange={setCurrentMatchIndex}
+                onCaseSensitiveChange={setIsCaseSensitive}
               />
             )}
             <HighlightedTextarea
@@ -176,6 +178,7 @@ export default function Home() {
               matches={matches}
               currentMatchIndex={currentMatchIndex}
               findText={findText}
+              isCaseSensitive={isCaseSensitive}
               onChange={handleContentChange}
             />
           </div>

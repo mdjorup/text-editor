@@ -7,6 +7,7 @@ interface HighlightedTextareaProps {
   matches: number[];
   currentMatchIndex: number;
   findText: string;
+  isCaseSensitive: boolean;
   onChange: (newContent: string) => void;
 }
 
@@ -14,6 +15,7 @@ const HighlightedTextarea: React.FC<HighlightedTextareaProps> = ({
   content,
   matches,
   currentMatchIndex,
+  isCaseSensitive,
   findText,
   onChange,
 }) => {
@@ -42,7 +44,7 @@ const HighlightedTextarea: React.FC<HighlightedTextareaProps> = ({
   const getHighlightedContent = () => {
     if (!findText) return content;
 
-    const parts = content.split(new RegExp(`(${findText})`, 'gi'));
+    const parts = content.split(new RegExp(`(${findText})`, isCaseSensitive ? 'g' : 'gi'));
     return parts.map((part, index) => {
       if (part.toLowerCase() === findText.toLowerCase()) {
         const matchIndex = Math.floor(index / 2);

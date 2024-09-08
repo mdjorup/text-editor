@@ -2,7 +2,7 @@
 
 import * as pdfjsLib from 'pdfjs-dist';
 import React, { useState } from 'react';
-import { Button } from './ui/button';
+import { Card, CardContent, CardHeader, CardTitle } from './ui/card';
 import { Input } from './ui/input';
 
 pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdn.jsdelivr.net/npm/pdfjs-dist@4.6.82/build/pdf.worker.mjs';
@@ -71,10 +71,14 @@ const UploadDocument = ({onUpload}: UploadDocumentProps) => {
   };
 
   return (
-    <div className="flex w-full max-w-sm items-center space-x-2">
-      <Input type="file" accept="application/pdf" placeholder='Upload your PDF' onChange={handleUpload}/>
-      <Button type="submit">Subscribe</Button>
-    </div>
+    <Card>
+      <CardHeader>
+        <CardTitle>Upload Document</CardTitle>
+      </CardHeader>
+      <CardContent>
+        <Input type="file" accept="application/pdf" placeholder='Upload your PDF' onChange={handleUpload}/>
+      </CardContent>
+    </Card>
   )
 }
 

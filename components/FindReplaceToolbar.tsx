@@ -12,10 +12,11 @@ interface FindReplaceToolbarProps {
   onClose: () => void;
   onFindTextChange: (findText: string) => void;
   onMatchesChange: (matches: number[]) => void;
+  onCaseSensitiveChange: (isCaseSensitive: boolean) => void;
   onCurrentMatchIndexChange: (index: number) => void;
 }
 
-const FindReplaceToolbar: React.FC<FindReplaceToolbarProps> = ({content, onReplace, onClose, onFindTextChange, onMatchesChange, onCurrentMatchIndexChange}) => {
+const FindReplaceToolbar: React.FC<FindReplaceToolbarProps> = ({content, onReplace, onClose, onFindTextChange, onMatchesChange, onCurrentMatchIndexChange, onCaseSensitiveChange}) => {
   const [findText, setFindText] = useState('')
   const [replaceText, setReplaceText] = useState('')
   const [matches, setMatches] = useState<number[]>([])
@@ -37,10 +38,10 @@ const FindReplaceToolbar: React.FC<FindReplaceToolbarProps> = ({content, onRepla
     while ((match = regex.exec(content)) !== null) {
       newMatches.push(match.index);
     }
-    setMatches(newMatches);
     const newCurrentMatchIndex = newMatches.length > 0 ? 0 : -1;
+    setMatches(newMatches);
     setCurrentMatchIndex(newCurrentMatchIndex);
-  }, [findText, content, isCaseSensitive]);
+  }, [isCaseSensitive, findText, content]);
 
   useEffect(() => {
     findMatches();
@@ -50,7 +51,8 @@ const FindReplaceToolbar: React.FC<FindReplaceToolbarProps> = ({content, onRepla
     onFindTextChange(findText);
     onMatchesChange(matches);
     onCurrentMatchIndexChange(currentMatchIndex);
-  }, [findText, matches, currentMatchIndex, onFindTextChange, onMatchesChange, onCurrentMatchIndexChange]);
+    onCaseSensitiveChange(isCaseSensitive);
+  }, [findText, matches, currentMatchIndex, isCaseSensitive, onFindTextChange, onMatchesChange, onCurrentMatchIndexChange, onCaseSensitiveChange]);
 
   const handleFindNext = () => {
     if (matches.length > 0) {
@@ -112,7 +114,9 @@ const FindReplaceToolbar: React.FC<FindReplaceToolbarProps> = ({content, onRepla
       <Button size="sm" onClick={handleReplace} disabled={replaceText === "" || matches.length === 0 }>Replace</Button>
       <Button size="sm" onClick={handleReplaceAll} disabled={replaceText === "" || matches.length === 0 }>Replace All</Button>
       <div className='flex items-center space-x-2'>
-        <Checkbox id="caseSensitive" checked={isCaseSensitive} onCheckedChange={() => setIsCaseSensitive(!isCaseSensitive)} />
+        <Checkbox id="caseSensitive" checked={isCaseSensitive} onCheckedChange={() => {
+          setIsCaseSensitive(!isCaseSensitive);
+        }} />
         <label htmlFor="caseSensitive" className='text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70'>Case sensitive</label>
       </div>
       <Button size="icon" variant="ghost" onClick={onClose}>

@@ -107,7 +107,7 @@ const FindReplaceToolbar: React.FC<FindReplaceToolbarProps> = ({content, onRepla
 
   return (
     <TooltipProvider>
-      <div className="fixed top-0 left-0 right-0 bg-white dark:bg-gray-800 shadow-md p-2 flex items-center space-x-2 z-50 border-b border-gray-200 dark:border-gray-700">
+      <div className="fixed top-0 left-0 right-0 bg-white dark:bg-gray-800 shadow-md p-4 flex items-center space-x-2 z-50 border-b border-gray-200 dark:border-gray-700">
         <div className="flex items-center space-x-2 flex-grow">
           <Search className="text-gray-400 dark:text-gray-500 h-4 w-4" />
           <Input

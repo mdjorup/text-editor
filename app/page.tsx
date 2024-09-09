@@ -12,9 +12,11 @@ import { Toaster } from "@/components/ui/toaster";
 import { useToast } from "@/hooks/use-toast";
 import { Version } from "@/lib/types";
 import { format } from "date-fns";
+import jsPDF from "jspdf";
 import { Clock, Edit2Icon, EyeIcon, FileIcon, HistoryIcon, RotateCcwIcon, SaveIcon } from 'lucide-react';
 import * as pdfjsLib from 'pdfjs-dist';
 import { useCallback, useEffect, useState } from "react";
+
 
 pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdn.jsdelivr.net/npm/pdfjs-dist@4.6.82/build/pdf.worker.mjs';
 
@@ -52,6 +54,28 @@ export default function Home() {
     })
   }, [activeDocument, versions, toast]);
 
+  const downloadPDF = (as: "PDF" | "TXT") => {
+    if (activeDocument === null) {
+      return;
+    }
+    
+    if (as === "PDF") {
+      const doc = new jsPDF();
+      doc.text(activeDocument, 10, 10);
+      doc.save("document.pdf");
+    } else if (as === "TXT") {
+      const element = document.createElement("a");
+      element.setAttribute('href', 'data:text/plain;charset=utf-8,' + encodeURIComponent(activeDocument));
+      element.setAttribute('download', "download.txt");
+      element.style.display = 'none';
+      document.body.appendChild(element);
+      element.click();
+      document.body.removeChild(element);
+    }
+  };
+
+
+
   const loadVersion = useCallback((versionId: number) => {
     const versionToLoad = versions.find(v => v.id === versionId);
     if (versionToLoad) {
@@ -78,6 +102,7 @@ export default function Home() {
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
+      console.log(e.key)
       if ((e.metaKey || e.ctrlKey) && e.key === 'h') {
         e.preventDefault();
         toggleVersionHistory();
@@ -90,6 +115,10 @@ export default function Home() {
         e.preventDefault();
         saveVersion();
       }
+      if ((e.metaKey || e.ctrlKey) && e.key === 'n') {
+        e.preventDefault();
+        handleNewDocument();
+      }
     };
 
     document.addEventListener('keydown', handleKeyDown);
@@ -97,6 +126,11 @@ export default function Home() {
       document.removeEventListener('keydown', handleKeyDown);
     };
   }, [saveVersion]);
+
+  const handleNewDocument = () => {
+    setActiveDocument(null);
+    setVersions([]);
+  }
 
   
 
@@ -121,19 +155,19 @@ export default function Home() {
                   <SaveIcon className="w-4 h-4 mr-2" />
                   Save Version <MenubarShortcut>⌘S</MenubarShortcut>
                 </MenubarItem>
-                <MenubarItem disabled className="flex items-center">
+                <MenubarItem className="flex items-center" onClick={handleNewDocument}>
                     <FileIcon className="w-4 h-4 mr-2" />
-                    New Document <MenubarShortcut>⌘N</MenubarShortcut>
+                    New Document <MenubarShortcut>⌃N</MenubarShortcut>
                   </MenubarItem>
                   <MenubarSeparator />
                   <MenubarSub>
-                    <MenubarSubTrigger disabled className="flex items-center">
+                    <MenubarSubTrigger className="flex items-center">
                       <FileIcon className="w-4 h-4 mr-2" />
                       Download
                     </MenubarSubTrigger>
                     <MenubarSubContent>
-                      <MenubarItem>PDF</MenubarItem>
-                      <MenubarItem>TXT</MenubarItem>
+                      <MenubarItem onClick={() => downloadPDF("PDF")}>PDF</MenubarItem>
+                      <MenubarItem onClick={() => downloadPDF("TXT")}>TXT</MenubarItem>
                     </MenubarSubContent>
                   </MenubarSub>
               </MenubarContent>

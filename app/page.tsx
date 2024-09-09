@@ -102,7 +102,7 @@ export default function Home() {
 
   
   return (
-    <main className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 dark:from-gray-900 dark:to-gray-800">
+    <main className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 ">
 
       <div className="h-screen w-screen flex flex-col overflow-hidden">
         {activeDocument === null  && <div className="flex items-center justify-center h-full w-full">
@@ -173,7 +173,7 @@ export default function Home() {
               </MenubarMenu>
           </Menubar>
 
-          <div className="flex-grow relative overflow-hidden bg-white dark:bg-gray-800 shadow-lg rounded-lg border border-gray-200 dark:border-gray-700">
+          <div className="flex-grow relative overflow-hidden bg-white  shadow-lg rounded-lg border border-gray-200">
               {showingFindReplace && (
                 <FindReplaceToolbar
                   content={activeDocument}

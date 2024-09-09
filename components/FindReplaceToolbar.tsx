@@ -9,6 +9,7 @@ import { Input } from './ui/input';
 import { Popover, PopoverContent, PopoverTrigger } from './ui/popover';
 import { Separator } from './ui/separator';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from './ui/tooltip';
+
 interface FindReplaceToolbarProps {
   content: string;
   onReplace: (newContent: string) => void;
@@ -40,12 +41,13 @@ const FindReplaceToolbar: React.FC<FindReplaceToolbarProps> = ({content, onRepla
     const regex = new RegExp(findText, flags);
     const newMatches: number[] = [];
     let match;
-    const t0 = console.time("findMatches");
+    console.time("findMatches");
     while ((match = regex.exec(content)) !== null) {
       newMatches.push(match.index);
     }
-    const t1 = console.timeEnd("findMatches");
+    console.timeEnd("findMatches");
     const newCurrentMatchIndex = newMatches.length > 0 ? 0 : -1;
+
     setMatches(newMatches);
     setCurrentMatchIndex(newCurrentMatchIndex);
   }, [isCaseSensitive, findText, content]);
